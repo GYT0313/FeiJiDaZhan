@@ -659,7 +659,7 @@ def pause():
         window_screen.blit(pause_image, (170,402))#背景
         #更新图片
         pygame.display.update()
-        sleep(0.1)#休眠0.1秒
+        time.sleep(0.1)#休眠0.1秒
         key_control()
 
 #导入数字图片
@@ -862,6 +862,8 @@ def main():
         #背景色填充
         window_screen.fill(bg_color)
         #得分更新
+        if hit_score >= 999:
+            hit_score = 999
         if hit_score > hit_score_temp and hero:
             hit_score_temp = hit_score
             show_score_HP()
