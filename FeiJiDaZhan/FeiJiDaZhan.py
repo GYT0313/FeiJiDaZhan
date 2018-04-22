@@ -47,7 +47,7 @@ description = None
 
 #关于飞机
 ##飞机HP
-HP_list = [1, 20, 120, 20]#enemy0, enemy1, enemy2, hero
+HP_list = [1, 20, 100, 20]#enemy0, enemy1, enemy2, hero
 #飞机大小
 plane_size = [{"width":51, "height":39}, {"width":69, "height":89}, {"width":165, "height":246}, {"width":100, "height":124}]
 #各种飞机爆炸效果计数更换图片
@@ -111,7 +111,10 @@ class BasePlane(Base):
             self.screen.blit(self.bomb_picture_list[self.image_index], (self.x, self.y))
             if self.plane_type != 3 and self.image_index == 0 and self.picture_count == 0:
                 if self.plane_type == 0:#击毁enemy0得分＋HP
-                    hit_score += HP_list[self.plane_type]
+                    if hit_score < 650:#初始血量为1
+                        hit_score += HP_list[self.plane_type]
+                    else:#初始血量为2
+                        hit_score += HP_list[self.plane_type]/2
                 elif self.plane_type == 1:#击毁enemy1得分＋HP/2
                     hit_score += HP_list[self.plane_type]/2
                 else:#击毁enemy2得分＋HP/4
@@ -288,8 +291,8 @@ class HeroPlane(BasePlane):
             if supply_temp_left_x > self.x+0.05*width and supply_temp_right_x <self.x+0.95*width and supply_temp_top_y < self.y+0.95*height and supply_temp_bottom_y > self.y+0.1*height:
                 if supply_temp.supply_type == 0:#0为血量补给，吃到血量补给
                     self.HP -= supply_temp.supply_HP#血量-(-3)
-                    if self.HP > 50:#血量最大值为50
-                        self.HP = 50
+                    if self.HP > 41:#血量最大值为41
+                        self.HP = 41
                     show_score_HP()
                 else:#吃到弹药补给
                     self.is_three_bullet = True
@@ -521,13 +524,22 @@ def create_enemy_plane():
     global enemy2_list
     global enemy2_maximum
     global HP_list
+
     if hit_score < 40:
         random_num = random.randint(1, 70)
-    elif hit_score < 550:
+        HP_list = [1, 20, 100, 20]
+    elif hit_score < 450:
         random_num = random.randint(1, 60)
+        HP_list = [1, 20, 120, 20]
+    elif hit_score < 650:
+        random_num = random.randint(1, 60)
+        HP_list = [1, 30, 140, 20]
+    elif hit_score < 850:
+        random_num = random.randint(1, 55)
+        HP_list = [2, 36, 160, 20]
     else:
         random_num = random.randint(1, 50)
-        HP_list = [1, 30, 160, 10]
+        HP_list = [2, 40, 180, 20]
     random_appear_boss1 = random.randint(18, 28)
     random_appear_boss2 = random.randint(80, 100)
     #enemy0
@@ -549,9 +561,9 @@ def create_supply_2_hero(s_type):
     if enemy2_list:#enemy2存在时补给概率更大
         random_limitation = 1201
     else:
-        random_limitation = 2101
+        random_limitation = 2080
     random_supply = random.randint(1, random_limitation)
-    if (random_supply%600) == 0 and s_type == 0:#血量补给
+    if (random_supply%690) == 0 and s_type == 0:#血量补给
         blood_supply = supply_2_hero(window_screen, random.randint(0, 480-58), random.randint(-105, -95), s_type, 3, -3)# -补给类型, -速度, -补给血量值(用的是减法)
     elif (random_supply%300) == 0 and s_type == 1:#弹药补给
         bullet_supply = supply_2_hero(window_screen, random.randint(0, 480-60), random.randint(-115, -108), s_type, 3, 0)
@@ -959,7 +971,7 @@ def main():
         #调用键盘控制
         key_control()
         #系统睡眠时间(电脑配置不同，影响游戏流畅运行度)
-        time.sleep(0.03)
+        time.sleep(0.04)
 
 if __name__ == "__main__":
     main()
