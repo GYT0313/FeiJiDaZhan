@@ -47,13 +47,13 @@ description = None
 
 #关于飞机
 ##飞机HP
-HP_list = [1, 20, 120, 10]#enemy0, enemy1, enemy2, hero
+HP_list = [1, 20, 120, 20]#enemy0, enemy1, enemy2, hero
 #飞机大小
 plane_size = [{"width":51, "height":39}, {"width":69, "height":89}, {"width":165, "height":246}, {"width":100, "height":124}]
 #各种飞机爆炸效果计数更换图片
 plane_bomb_time = [5, 8, 14, 8]#enemy0, enemy1, enemy2, hero
 #飞机最大子弹数
-plane_maximum_bullet = [2, 5, 7, 5]#enemy0, enemy1, enemy2, hero
+plane_maximum_bullet = [2, 5, 7, 8]#enemy0, enemy1, enemy2, hero
 #血量补给
 blood_supply = None
 #子弹补给
@@ -170,11 +170,12 @@ class HeroPlane(BasePlane):
     def __init__(self, screen_temp):
         BasePlane.__init__(self, 3, screen_temp, 210, 728, "./feiji/hero1.png", 4, HP_list[3]) #super().__init__()
         BasePlane.crate_images(self, "hero_blowup_n")
-        self.key_down_list = [] #用来存储键盘左右移动键
+        self.key_down_list = [] #用来存储键盘上下左右移动键
+        self.space_key_list = []#保存space键
         self.is_three_bullet = False
         self.barrel_2 = []#2号炮管(左)
         self.barrel_3 = []#3号炮管(右)
-        self.three_bullet_stock = 30#三管齐发子弹初始值为30
+        self.three_bullet_stock = 50#三管齐发子弹初始值为50
     #单键移动方向
     def move_left(self):
         self.x -= 7
@@ -242,11 +243,30 @@ class HeroPlane(BasePlane):
     def bomb(self):
         self.hitted = True
         self.HP = 0
+    #键盘按下向列表添加space
+    def space_key_down(self, key):
+        self.space_key_list.append(key)
+    #键盘松开向列表删除space
+    def space_key_up(self, key):
+        if len(self.space_key_list) != 0: #判断是否为空
+            try:
+                self.space_key_list.pop(0)
+            except Exception:
+                raise
+    #按键space不放,持续开火
+    def press_fire(self):
+        if len(self.bullet_list) == 0 and len(self.space_key_list):
+            self.fire()
+        else:
+            if len(self.space_key_list) != 0:
+                if self.bullet_list[len(self.bullet_list)-1].y < self.y-14-60:
+                    self.fire()
     #开火
     def fire(self):
         global plane_maximum_bullet
+        hero_fire_music.play()
         if not self.is_three_bullet:
-            if len(self.bullet_list) < plane_maximum_bullet[self.plane_type]:#单发炮台子弹限制为5
+            if len(self.bullet_list) < plane_maximum_bullet[self.plane_type]:#单发炮台子弹限制为8
                 self.bullet_list.append(Bullet(self.screen, self.x+40, self.y-14, self))
         else:#没有子弹限制
             #主炮管
@@ -268,12 +288,12 @@ class HeroPlane(BasePlane):
             if supply_temp_left_x > self.x+0.05*width and supply_temp_right_x <self.x+0.95*width and supply_temp_top_y < self.y+0.95*height and supply_temp_bottom_y > self.y+0.1*height:
                 if supply_temp.supply_type == 0:#0为血量补给，吃到血量补给
                     self.HP -= supply_temp.supply_HP#血量-(-3)
-                    if self.HP > 30:#血量最大值为30
-                        self.HP = 30
+                    if self.HP > 50:#血量最大值为50
+                        self.HP = 50
                     show_score_HP()
                 else:#吃到弹药补给
                     self.is_three_bullet = True
-                    self.three_bullet_stock += 10#三管炮弹余量+10
+                    self.three_bullet_stock += 20#三管炮弹余量+20
                 del_supply(supply_temp)
 
 
@@ -500,14 +520,18 @@ def create_enemy_plane():
     global enemy1_maximum
     global enemy2_list
     global enemy2_maximum
+    global HP_list
     if hit_score < 40:
+        random_num = random.randint(1, 70)
+    elif hit_score < 550:
         random_num = random.randint(1, 60)
     else:
         random_num = random.randint(1, 50)
-    random_appear_boss1 = random.randint(19, 26)
+        HP_list = [1, 30, 160, 10]
+    random_appear_boss1 = random.randint(18, 28)
     random_appear_boss2 = random.randint(80, 100)
     #enemy0
-    if (random_num == 29 or random == 40) and len(enemy0_list) < enemy0_maximum:
+    if (random_num == 20 or random == 40) and len(enemy0_list) < enemy0_maximum:
         enemy0_list.append(Enemy0Plane(window_screen))
     #enemy1
     if (hit_score >= random_appear_boss1 and (hit_score%random_appear_boss1) == 0) and len(enemy1_list) < enemy1_maximum:
@@ -523,11 +547,11 @@ def create_supply_2_hero(s_type):
     global bullet_supply
     global enemy2_list
     if enemy2_list:#enemy2存在时补给概率更大
-        random_limitation = 1010
+        random_limitation = 1201
     else:
-        random_limitation = 2000
+        random_limitation = 2101
     random_supply = random.randint(1, random_limitation)
-    if (random_supply%1005) == 0 and s_type == 0:#血量补给
+    if (random_supply%600) == 0 and s_type == 0:#血量补给
         blood_supply = supply_2_hero(window_screen, random.randint(0, 480-58), random.randint(-105, -95), s_type, 3, -3)# -补给类型, -速度, -补给血量值(用的是减法)
     elif (random_supply%300) == 0 and s_type == 1:#弹药补给
         bullet_supply = supply_2_hero(window_screen, random.randint(0, 480-60), random.randint(-115, -108), s_type, 3, 0)
@@ -639,6 +663,8 @@ def show_max_score():
 
 #切割数字成百十个位
 def cut_number(number):
+    if number > 999:
+        number = 999
     hundred_num = round(number//100)#向下取整
     number %= 100
     ten_num = round(number//10)
@@ -740,6 +766,12 @@ def key_control():
     global is_pause
     global hero_fire_music
     global plane_maximum_bullet
+    global enemy0_list
+    global enemy1_list
+    global enemy2_list
+    global blood_supply
+    global bullet_supply
+    global hit_score
     #获取事件，比如按键等
     for event in pygame.event.get():
         #判断是否是点击了退出按钮
@@ -769,11 +801,7 @@ def key_control():
                             hero.is_three_bullet = True
                 #检测按键是否是空格键
                 elif event.key == K_SPACE and hero.HP:
-                    if hero.is_three_bullet:#三管时不限制
-                        hero_fire_music.play()
-                    elif len(hero.bullet_list) < plane_maximum_bullet[hero.plane_type]:#单管且能够发射子弹才播放音乐
-                        hero_fire_music.play()
-                    hero.fire()
+                    hero.space_key_down(K_SPACE) #想space列表添加k_space
                 #检测按键是否是b
                 elif event.key == K_b:#自爆
                     hero.bomb()
@@ -800,6 +828,9 @@ def key_control():
             #检测按键是否是down
             elif event.key == K_DOWN:
                 hero.key_up(K_DOWN)
+            #检测按键是否是space
+            elif event.key == K_SPACE:
+                hero.space_key_up(K_SPACE)
         #判断点击鼠标
         elif event.type == MOUSEBUTTONDOWN:#鼠标按下
             pressed_array = pygame.mouse.get_pressed()#获得鼠标点击类型[0,1,2] 左键,滑轮,邮件
@@ -814,7 +845,15 @@ def key_control():
                             pygame.mixer.music.unpause()#继续播放
                             is_pause = False#不暂停
                         elif mouse_x >530 and mouse_x < 642 and mouse_y > 760 and mouse_y < 808:#重新开始游戏事件
+                            #回收所有对对象
                             reborn()
+                            enemy0_list = []
+                            enemy1_list = []
+                            enemy2_list = []
+                            blood_supply = None
+                            bullet_supply = None
+                            # hit_score = 0
+                            # main()
                         elif mouse_x >532 and mouse_x < 642 and mouse_y > 810 and mouse_y < 834:#退出游戏事件
                             exit()
 
@@ -885,7 +924,8 @@ def main():
         if hero:
             hero.display() #hero展示
             if hero:
-                hero.press_move()
+                hero.press_move()#持续移动
+                hero.press_fire()#持续开火
                 hero.move_limit() #hero移动范围判断
         #blood_supply
         if blood_supply:
@@ -919,7 +959,7 @@ def main():
         #调用键盘控制
         key_control()
         #系统睡眠时间(电脑配置不同，影响游戏流畅运行度)
-        time.sleep(0.035)
+        time.sleep(0.03)
 
 if __name__ == "__main__":
     main()
