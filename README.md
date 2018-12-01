@@ -2,7 +2,7 @@
 ---
 ### 版本：Python3
 
-Python语言的Pygame模块编写的飞机大战小游戏，内含源码和exe文件。
+✈Python语言的Pygame模块编写的飞机大战小游戏，内含源码和exe文件。
 
 使用 py2exe 模块将文件打包成可执行文件，最好在windows打包，linux可能报错，缺少某个文件。
 
