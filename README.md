@@ -1,7 +1,10 @@
 # ✈FeiJiDaZhan
 ---
+
 ### 运行： python FeiJiDaZhan.py
-### 版本：Python3
+#### 安装pygame：pip install pygame
+
+#### 版本：Python3
 
 Python语言的Pygame模块编写的飞机大战小游戏，内含源码和exe文件。
 
